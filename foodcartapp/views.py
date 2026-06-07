@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 
 from .models import Product, Order, OrderItem
@@ -62,14 +63,31 @@ def product_list_api(request):
 def register_order(request):
     data = request.data
 
+    if 'products' not in data:
+        return Response(
+            {'products': 'Обязательное поле.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    products = data['products']
+
+    if not isinstance(products, list):
+        return Response(
+            {'products': 'Ожидался list со значениями.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    if not products:
+        return Response(
+            {'products': 'Этот список не может быть пустым.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     order = Order.objects.create(
         firstname=data['firstname'],
         lastname=data['lastname'],
         phonenumber=data['phonenumber'],
         address=data['address'],
     )
-
-    for item in data['products']:
+    for item in products:
         OrderItem.objects.create(
             order=order,
             product=Product.objects.get(id=item['product']),
