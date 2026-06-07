@@ -6,6 +6,8 @@ from rest_framework import status
 
 
 from .models import Product, Order, OrderItem
+from .serializers import OrderSerializer
+
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -61,36 +63,22 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    data = request.data
+    serializer = OrderSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-    if 'products' not in data:
-        return Response(
-            {'products': 'Обязательное поле.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    validated = serializer.validated_data
 
-    products = data['products']
-
-    if not isinstance(products, list):
-        return Response(
-            {'products': 'Ожидался list со значениями.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    if not products:
-        return Response(
-            {'products': 'Этот список не может быть пустым.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
     order = Order.objects.create(
-        firstname=data['firstname'],
-        lastname=data['lastname'],
-        phonenumber=data['phonenumber'],
-        address=data['address'],
+        firstname=validated['firstname'],
+        lastname=validated['lastname'],
+        phonenumber=validated['phonenumber'],
+        address=validated['address'],
     )
-    for item in products:
+
+    for item in validated['products']:
         OrderItem.objects.create(
             order=order,
-            product=Product.objects.get(id=item['product']),
+            product=item['product'],
             quantity=item['quantity'],
         )
 
