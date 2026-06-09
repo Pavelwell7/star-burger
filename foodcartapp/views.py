@@ -65,7 +65,6 @@ def product_list_api(request):
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
     validated = serializer.validated_data
 
     order = Order.objects.create(
@@ -81,5 +80,5 @@ def register_order(request):
             product=item['product'],
             quantity=item['quantity'],
         )
-
-    return Response({})
+    response_serializer = OrderSerializer(order)
+    return Response(response_serializer.data)

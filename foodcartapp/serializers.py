@@ -18,5 +18,6 @@ class OrderSerializer(Serializer):
     address = serializers.CharField()
     products = OrderItemSerializer(
         many=True,
-        allow_empty=False
+        allow_empty=False,
+        write_only=True,
     )
