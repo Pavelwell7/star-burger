@@ -27,6 +27,11 @@
         <td>{{ item.firstname }} {{ item.lastname }}</td>
         <td>{{ item.phonenumber }}</td>
         <td>{{ item.address }}</td>
+        <td>
+          <a href="{% url 'admin:foodcartapp_order_change' item.id %}">
+            Редактровать
+          </a>
+        <td>
       </tr>
     {% endfor %}
 
