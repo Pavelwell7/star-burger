@@ -141,7 +141,10 @@ class Order(models.Model):
         default='unprocessed',
         db_index=True,
     )
-
+    comment = models.TextField(
+        'комментарий',
+        blank=True,
+    )
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
