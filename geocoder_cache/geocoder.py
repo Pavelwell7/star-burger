@@ -48,3 +48,29 @@ def fetch_coordinates(address):
 
     except requests.exceptions.RequestException:
         return None
+
+def get_coordinates_map(addresses):
+
+    cached_places = Place.objects.filter(address__in=addresses)
+    coordinates_map = {}
+    cached_addresses = set()
+    for place in cached_places:
+        if place.lat is not None and place.lon is not None:
+            coordinates_map[place.address] = (place.lat, place.lon)
+        else:
+            coordinates_map[place.address] = None
+        cached_addresses.add(place.address)
+
+    missing_addresses = set(addresses) - cached_addresses
+    for address in missing_addresses:
+        coords = fetch_coordinates(address)
+        coordinates_map[address] = coords
+
+        Place.objects.create(
+            address=address,
+            lat=coords[0] if coords else None,
+            lon=coords[1] if coords else None,
+            updated_at=timezone.now(),
+        )
+
+    return coordinates_map

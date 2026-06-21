@@ -11,7 +11,8 @@ from django.contrib.auth import views as auth_views
 
 
 from geopy.distance import distance
-from geocoder_cache.geocoder import fetch_coordinates
+from geocoder_cache.geocoder import fetch_coordinates, get_coordinates_map
+
 
 
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
@@ -88,7 +89,6 @@ def view_products(request):
         'restaurants': restaurants,
     })
 
-
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_restaurants(request):
     return render(request, template_name='restaurants_list.html', context={
@@ -115,23 +115,28 @@ def view_orders(request):
         'restaurant'
     ).with_total_price()
 
+    all_addresses = set()
+    for order in orders:
+        all_addresses.add(order.address)
+    for restaurant in restaurant_products.keys():
+        all_addresses.add(restaurant.address)
+
+    coordinates_map = get_coordinates_map(all_addresses)
+
     orders_with_restaurants = []
     for order in orders:
         order_products = {item.product_id for item in order.items.all()}
-        delivery_coords = fetch_coordinates(order.address)
+        delivery_coords = coordinates_map.get(order.address)
 
         available_restaurants = []
         for restaurant, products in restaurant_products.items():
             if not order_products.issubset(products):
                 continue
 
-            if delivery_coords:
-                restaurant_coords = fetch_coordinates(restaurant.address)
-                if restaurant_coords:
-                    km = round(distance(delivery_coords, restaurant_coords).km, 2)
-                    available_restaurants.append((restaurant, km))
-                else:
-                    available_restaurants.append((restaurant, None))
+            restaurant_coords = coordinates_map.get(restaurant.address)
+            if delivery_coords and restaurant_coords:
+                km = round(distance(delivery_coords, restaurant_coords).km, 2)
+                available_restaurants.append((restaurant, km))
             else:
                 available_restaurants.append((restaurant, None))
 
