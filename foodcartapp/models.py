@@ -130,6 +130,10 @@ class Order(models.Model):
         ('delivery', 'Передан курьеру'),
         ('done', 'Выполнен'),
     ]
+    PAYMENT_CHOICES = [
+        ('electronic', 'Электронно'),
+        ('cash', 'Наличностью'),
+    ]
     firstname = models.CharField('имя', max_length=50)
     lastname = models.CharField('фамилия', max_length=50)
     phonenumber = models.CharField('телефон', max_length=50)
@@ -144,6 +148,14 @@ class Order(models.Model):
     comment = models.TextField(
         'комментарий',
         blank=True,
+    )
+    payment_method = models.CharField(
+        'способ оплаты',
+        max_length=20,
+        choices=PAYMENT_CHOICES,
+        default='',
+        blank=True,
+        db_index=True,
     )
     class Meta:
         verbose_name = 'заказ'
