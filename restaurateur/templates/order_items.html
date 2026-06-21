@@ -36,28 +36,28 @@
     <td>{{ item.order.address }}</td>
     <td>{{ item.order.comment }}</td>
     <td>
-      {% if item.order.restaurant %}
-        Готовит {{ item.order.restaurant.name }}
-      {% elif item.delivery_coords_error %}
-        Ошибка определения координат адреса доставки
-      {% else %}
-        <details>
-          <summary>Может быть приготовлен ресторанами:</summary>
-          <ul>
-            {% for restaurant, km in item.available_restaurants %}
-              <li>
-                {{ restaurant.name }}
-                {% if km %}— {{ km }} км{% endif %}
-              </li>
-            {% empty %}
-              <li>Ни один ресторан не может приготовить этот заказ</li>
-            {% endfor %}
-          </ul>
-        </details>
-      {% endif %}
+    {% if item.order.restaurant %}
+      Готовит {{ item.order.restaurant.name }}
+    {% elif item.delivery_coords_error %}
+      Адрес не найден
+    {% else %}
+    <details>
+      <summary>Может быть приготовлен ресторанами:</summary>
+    <ul>
+      {% for restaurant, km in item.available_restaurants %}
+        <li>
+          {{ restaurant.name }}
+          {% if km %}— {{ km }} км{% endif %}
+        </li>
+      {% empty %}
+        <li>Ни один ресторан не может приготовить этот заказ</li>
+      {% endfor %}
+    </ul>
+    </details>
+    {% endif %}
     </td>
     <td>
-      <a href="{% url 'admin:foodcartapp_order_change' item.order.id %}?next={{ request.path }}">
+      <a href="{% url 'admin:foodcartapp_order_change' item.order.id %}?next={{ request.path|urlencode }}">
         Редактировать
       </a>
     </td>
