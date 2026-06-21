@@ -2,6 +2,19 @@ from django.db import models
 from django.core.validators import MinValueValidator
 
 
+from django.db.models import Sum, F, Value, DecimalField
+from django.db.models.functions import Coalesce
+
+
+class OrderQuerySet(models.QuerySet):
+    def with_total_price(self):
+        return self.annotate(
+            total_price=Coalesce(
+                Sum(F('items__quantity') * F('items__price')),
+                Value(0, output_field=DecimalField())
+            )
+        )
+
 class Restaurant(models.Model):
     name = models.CharField(
         'название',
@@ -162,6 +175,9 @@ class Order(models.Model):
         blank=True,
         related_name='orders',
     )
+
+    objects = OrderQuerySet.as_manager()
+
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'

@@ -3,8 +3,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
-from django.db.models import Sum, F, Value, DecimalField
-from django.db.models.functions import Coalesce
+
 
 
 from django.contrib.auth import authenticate, login
@@ -12,7 +11,7 @@ from django.contrib.auth import views as auth_views
 
 
 from geopy.distance import distance
-from foodcartapp.geocoder import fetch_coordinates
+from geocoder_cache.geocoder import fetch_coordinates
 
 
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
@@ -114,12 +113,7 @@ def view_orders(request):
         'items__product'
     ).select_related(
         'restaurant'
-    ).annotate(
-        total_price=Coalesce(
-            Sum(F('items__quantity') * F('items__price')),
-            Value(0, output_field=DecimalField())
-        )
-    )
+    ).with_total_price()
 
     orders_with_restaurants = []
     for order in orders:
