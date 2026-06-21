@@ -145,10 +145,7 @@ class Order(models.Model):
         default='unprocessed',
         db_index=True,
     )
-    comment = models.TextField(
-        'комментарий',
-        blank=True,
-    )
+    comment = models.TextField('комментарий', blank=True)
     payment_method = models.CharField(
         'способ оплаты',
         max_length=20,
@@ -156,6 +153,14 @@ class Order(models.Model):
         default='',
         blank=True,
         db_index=True,
+    )
+    restaurant = models.ForeignKey(
+        Restaurant,
+        verbose_name='ресторан',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders',
     )
     class Meta:
         verbose_name = 'заказ'
