@@ -11,6 +11,9 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
+from geopy.distance import distance
+from foodcartapp.geocoder import fetch_coordinates
+
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 
 
@@ -116,18 +119,35 @@ def view_orders(request):
             Value(0, output_field=DecimalField())
         )
     )
+
     orders_with_restaurants = []
     for order in orders:
         order_products = {item.product_id for item in order.items.all()}
-        available_restaurants = [
-            restaurant
-            for restaurant, products in restaurant_products.items()
-            if order_products.issubset(products)
-        ]
+        delivery_coords = fetch_coordinates(order.address)
+
+        available_restaurants = []
+        for restaurant, products in restaurant_products.items():
+            if not order_products.issubset(products):
+                continue
+
+            if delivery_coords:
+                restaurant_coords = fetch_coordinates(restaurant.address)
+                if restaurant_coords:
+                    km = round(distance(delivery_coords, restaurant_coords).km, 2)
+                    available_restaurants.append((restaurant, km))
+                else:
+                    available_restaurants.append((restaurant, None))
+            else:
+                available_restaurants.append((restaurant, None))
+
+        available_restaurants.sort(
+            key=lambda x: x[1] if x[1] is not None else float('inf')
+        )
 
         orders_with_restaurants.append({
             'order': order,
             'available_restaurants': available_restaurants,
+            'delivery_coords_error': delivery_coords is None,
         })
 
     return render(request, template_name='order_items.html', context={

@@ -38,12 +38,17 @@
     <td>
       {% if item.order.restaurant %}
         Готовит {{ item.order.restaurant.name }}
+      {% elif item.delivery_coords_error %}
+        Ошибка определения координат адреса доставки
       {% else %}
         <details>
           <summary>Может быть приготовлен ресторанами:</summary>
           <ul>
-            {% for restaurant in item.available_restaurants %}
-              <li>{{ restaurant.name }}</li>
+            {% for restaurant, km in item.available_restaurants %}
+              <li>
+                {{ restaurant.name }}
+                {% if km %}— {{ km }} км{% endif %}
+              </li>
             {% empty %}
               <li>Ни один ресторан не может приготовить этот заказ</li>
             {% endfor %}
