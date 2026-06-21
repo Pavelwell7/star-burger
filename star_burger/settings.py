@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'phonenumber_field',
+    'geocoder_cache',
 ]
 
 MIDDLEWARE = [
