@@ -119,6 +119,7 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['firstname', 'lastname', 'phonenumber', 'address', 'comment']
+    search_fields = ['phonenumber']
     inlines = [OrderItemInline]
 
     def response_change(self, request, obj):
