@@ -18,6 +18,14 @@ DEBUG = env.bool('DEBUG', True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
+ROLLBAR_ACCESS_TOKEN = env('ROLLBAR_ACCESS_TOKEN', None)
+
+ROLLBAR = {
+    'access_token': ROLLBAR_ACCESS_TOKEN,
+    'environment': 'development' if DEBUG else 'production',
+    'root': BASE_DIR,
+}
+
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
     'restaurateur.apps.RestaurateurConfig',
@@ -43,6 +51,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+if ROLLBAR_ACCESS_TOKEN:
+    MIDDLEWARE.append('rollbar.contrib.django.middleware.RollbarNotifierMiddleware')
 
 ROOT_URLCONF = 'star_burger.urls'
 

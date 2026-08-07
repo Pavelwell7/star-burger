@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
+from django.http import HttpResponse
 
 from .models import Product, Order, OrderItem
 from .serializers import OrderSerializer
@@ -85,3 +85,8 @@ def register_order(request):
             )
     response_serializer = OrderSerializer(order)
     return Response(response_serializer.data)
+def test_error(request):
+    """Trigger a test error for Rollbar."""
+    a = None
+    a.hello()  # This will raise AttributeError
+    return HttpResponse("This will not be reached")
