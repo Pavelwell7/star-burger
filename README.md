@@ -2,6 +2,8 @@
 
 Это сайт сети ресторанов Star Burger. Здесь можно заказать превосходные бургеры с доставкой на дом.
 
+Адрес сайта [Star Burger](https://pavelwell.online/)
+
 ![скриншот сайта](https://dvmn.org/filer/canonical/1594651635/686/)
 
 
@@ -54,12 +56,26 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+[Установите PostgreSQL](https://www.postgresql.org/download/), если этого ещё не сделали. Создайте пользователя и базу данных:
+
 ```sh
-SECRET_KEY=django-insecure-0if40nf4nf93n4
+psql -U postgres
+```
+```sql
+CREATE USER starburger_user WITH PASSWORD 'ваш_пароль';
+CREATE DATABASE starburger_db OWNER starburger_user;
+\q
 ```
 
-Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
+Создайте файл `.env` в каталоге `star_burger/` и положите туда такой код:
+```sh
+SECRET_KEY=django-insecure-0if40nf4nf93n4
+DATABASE_URL=postgres://starburger_user:ваш_пароль@127.0.0.1:5432/starburger_db
+```
+
+`DATABASE_URL` — строка подключения к PostgreSQL в едином формате `postgres://<пользователь>:<пароль>@<хост>:<порт>/<имя_базы>`. Если переменную не задать, проект по умолчанию использует SQLite (`db.sqlite3`) — подходит для быстрого локального теста, но не рекомендуется для продакшена.
+
+Примените миграции:
 
 ```sh
 python manage.py migrate
@@ -133,6 +149,29 @@ Parcel будет следить за файлами в каталоге `bundle
 
 **Сбросьте кэш браузера <kbd>Ctrl-F5</kbd>.** Браузер при любой возможности старается кэшировать файлы статики: CSS, картинки и js-код. Порой это приводит к странному поведению сайта, когда код уже давно изменился, но браузер этого не замечает и продолжает использовать старую закэшированную версию. В норме Parcel решает эту проблему самостоятельно. Он следит за пересборкой фронтенда и предупреждает JS-код в браузере о необходимости подтянуть свежий код. Но если вдруг что-то у вас идёт не так, то начните ремонт со сброса браузерного кэша, жмите <kbd>Ctrl-F5</kbd>.
 
+### Перенос данных из SQLite в PostgreSQL
+
+Если у вас уже есть данные в старой базе `db.sqlite3` и вы переходите на PostgreSQL, перенесите их так:
+
+Выгрузите данные из SQLite (закомментировав `DATABASE_URL` в `.env`), исключив служебные таблицы, которые Django создаёт заново сам при `migrate`:
+
+```sh
+python manage.py dumpdata -e contenttypes -e auth.permission --natural-foreign --natural-primary --output db_dump.json
+```
+
+На Windows перед этим может понадобиться явно включить UTF-8, иначе файл сохранится в системной кодировке и `loaddata` упадёт с `UnicodeDecodeError`:
+```sh
+$env:PYTHONUTF8="1"
+```
+
+Раскомментируйте `DATABASE_URL`, примените миграции к новой пустой базе и загрузите данные:
+```sh
+python manage.py migrate
+python manage.py loaddata db_dump.json
+```
+
+После проверки, что все данные на месте, файл `db.sqlite3` можно удалить.
+
 
 ## Как запустить prod-версию сайта
 
@@ -147,6 +186,7 @@ Parcel будет следить за файлами в каталоге `bundle
 - `DEBUG` — дебаг-режим. Поставьте `False`.
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/5.2/ref/settings/#allowed-hosts)
+- `DATABASE_URL` — строка подключения к PostgreSQL: `postgres://<пользователь>:<пароль>@<хост>:<порт>/<имя_базы>`. На проде используйте отдельный, отличный от локального, пароль к базе.
 - `YANDEX_GEOCODER_API_KEY` — зайди на [developer.tech.yandex.ru](https://developer.tech.yandex.ru/services) > создай проект > подключи Геокодер API > скопируй ключ.
 - `ROLLBAR_ACCESS_TOKEN` — токен_из_rollbar [зайди на сайт > зарегестрируйся > выбери Django > получи инструкцию по интеграции](https://rollbar.com/)
 
