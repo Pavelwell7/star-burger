@@ -143,3 +143,8 @@ cython_debug/
 
 .parcel-cache/
 .idea
+
+staticfiles/
+db_dump.json
+.env.save
+*.save
