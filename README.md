@@ -213,10 +213,6 @@ python manage.py loaddata db_dump.json
    ```sh
    ssh root@85.198.64.133
    ```
-- Перейдите в директорию проекта:
-   ```sh
-   cd /opt/star-burger
-   ```
 - Убедитесь, что скрипт имеет права на исполнение (требуется сделать только один раз):
   ```sh
   chmod +x deploy.sh
