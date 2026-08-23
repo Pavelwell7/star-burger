@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.frontend
+    command: ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+    volumes:
+      - ../bundles:/app/bundles
+
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.backend
+      args:
+        SECRET_KEY: ${SECRET_KEY}
+        DATABASE_URL: ${DATABASE_URL}
+    restart: always
+    command: gunicorn star_burger.wsgi --bind 0.0.0.0:8000
+    env_file:
+      - .env
+    volumes:
+      - ../media:/app/media
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
