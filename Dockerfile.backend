@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY . /app/
+
+
+ARG SECRET_KEY=build-time-placeholder
+ARG DATABASE_URL=sqlite:////tmp/build.sqlite3
+ENV SECRET_KEY=${SECRET_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
+
+RUN python manage.py collectstatic --noinput
