@@ -224,6 +224,72 @@ python manage.py loaddata db_dump.json
 
 При успешном выполнении в консоли отобразится сообщение `Done!`.
 
+## Как запустить dev-версию сайта (через Docker)
+
+Всё окружение — Django, PostgreSQL и сборка фронтенда — запускается одной командой через Docker Compose. Ставить Python, Node.js или PostgreSQL на свою машину вручную не нужно.
+
+### Что понадобится
+
+- [Docker](https://www.docker.com/products/docker-desktop/) — включает и Docker Engine, и Docker Compose
+
+Создайте файл `.env.docker` в корне проекта:
+```sh
+SECRET_KEY=django-insecure-любое-значение-для-разработки
+YANDEX_GEOCODER_API_KEY=ваш_ключ_яндекс_карт
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,backend
+ROLLBAR_ACCESS_TOKEN=ваш_токен_rollbar
+DB_HOST=db
+DB_PORT=5432
+DATABASE_URL=postgres://starburger_user:пароль@db:5432/starburger_db
+```
+
+### Запуск
+
+```sh
+docker compose up --build
+```
+
+Эта команда поднимет три контейнера:
+- **`db`** — PostgreSQL, данные сохраняются между перезапусками в docker volume
+- **`frontend`** — следит за файлами в `bundles-src/` и пересобирает бандлы (`bundles/index.js`, `bundles/index.css`) при каждом изменении, аналог `parcel watch`
+- **`backend`** — Django через `runserver`, автоматически перезагружается при изменении Python-кода
+
+Откройте сайт по адресу [http://localhost:8000/](http://localhost:8000/).
+
+### Первый запуск — примените миграции
+
+```sh
+docker compose exec backend python manage.py migrate
+```
+
+Если нужен доступ в админку:
+```sh
+docker compose exec backend python manage.py createsuperuser
+```
+
+### Полезные команды
+
+Посмотреть логи:
+```sh
+docker compose logs -f backend
+```
+
+Выполнить любую management-команду Django:
+```sh
+docker compose exec backend python manage.py <команда>
+```
+
+Остановить всё:
+```sh
+docker compose down
+```
+
+## Деплой на сервер
+
+Инструкция по развёртыванию prod-версии — в отдельном README: [`deploy/README.md`](deploy/README.md).
+
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
